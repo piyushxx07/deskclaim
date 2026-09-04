@@ -1,0 +1,21 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "client/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "client/build"
+      }
+    },
+    {
+      "src": "api/index.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api/index.js" },
+    { "src": "/(.*\\.(png|jpg|jpeg|gif|webp|svg|ico|js|css|map))", "dest": "/client/build/$1" },
+    { "src": "/(.*)", "dest": "/client/build/index.html" }
+  ]
+}

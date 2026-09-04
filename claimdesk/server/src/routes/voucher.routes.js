@@ -1,8 +1,10 @@
 const router = require('express').Router();
 const { authRequired, requireRole } = require('../middleware/auth');
 const upload = require('../middleware/upload');
+const { uploadToSupabase } = require('../middleware/upload');
 const voucherService = require('../services/voucher.service');
 const aiService = require('../services/ai.service');
+const ApiError = require('../utils/ApiError');
 
 const wrap = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 
@@ -62,8 +64,8 @@ router.post(
   requireRole('employee'),
   upload.single('signature'),
   wrap(async (req, res) => {
-    if (!req.file) throw new (require('../utils/ApiError'))(400, 'Signature file is required');
-    const url = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    if (!req.file) throw new ApiError(400, 'Signature file is required');
+    const url = await uploadToSupabase(req.file, `employee/${req.user.id}`);
     const data = await voucherService.submit(req.params.id, req.user.id, url);
     res.json({ success: true, data });
   })
@@ -75,8 +77,8 @@ router.post(
   requireRole('director'),
   upload.single('signature'),
   wrap(async (req, res) => {
-    if (!req.file) throw new (require('../utils/ApiError'))(400, 'Signature file is required');
-    const url = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    if (!req.file) throw new ApiError(400, 'Signature file is required');
+    const url = await uploadToSupabase(req.file, `director/${req.user.id}`);
     const data = await voucherService.approve(req.params.id, req.user.id, url);
     res.json({ success: true, data });
   })

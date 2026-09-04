@@ -1,143 +1,249 @@
-# ClaimDesk - Expense Voucher Management System
+# 💠 ClaimDesk
 
-A web-based expense voucher management system that replaces the manual voucher approval process at ABC Company.
-Employees create and submit vouchers, the Director approves or rejects them, and the Accounts Team monitors them for reimbursement.
+### Expense Voucher Management System
 
-## Tech stack
+> A full-stack expense management platform that digitizes voucher creation, approval, and reimbursement workflows.
 
-- **Frontend:** React 18, React Router, Bootstrap 5, React Toastify, Axios
-- **Backend:** Node.js, Express, JWT (jsonwebtoken), bcrypt, Multer (file uploads)
-- **Database:** Supabase (Postgres)
-- **Auth:** Custom JWT signed by the backend, role-based protected routes
+**React 18 · Node.js · Express · PostgreSQL · Supabase · JWT · Vercel**
 
-## Project structure
+---
 
-```
-claimdesk/
-  server/
-    src/
-      config/        # Supabase client
-      controllers/   # (reserved for future split)
-      middleware/    # auth, errorHandler, upload
-      routes/        # auth, voucher, user
-      services/      # auth.service, voucher.service, user.service
-      utils/         # ApiError class
-      server.js      # entry point
-    db/
-      schema.sql     # run once in Supabase SQL editor
-    scripts/
-      seedUsers.js   # seeds demo accounts with real bcrypt hash
-    uploads/         # uploaded signature images
-    .env.example
-    package.json
+## 🚀 Overview
 
-  client/
-    public/
-    src/
-      api/           # axios instance + endpoint wrappers
-      components/    # AppShell, Sidebar, Topbar, ProtectedRoute, SearchFilterBar
-      context/       # AuthContext
-      pages/
-        auth/        # LoginPage
-        employee/    # Dashboard, Vouchers, VoucherForm
-        director/    # Dashboard, Vouchers
-        accounts/    # Dashboard, Vouchers
-        shared/      # VoucherDetails
-      styles/        # app.css
-      utils/         # format helpers
-      App.js
-      index.js
-    package.json
+ClaimDesk replaces a manual expense voucher process with a centralized, role-based workflow.
+
+**Employee → Director → Accounts**
+
+* 👤 **Employee** — Create, edit, submit & track vouchers
+* 🛡️ **Director** — Review, AI-assisted risk analysis, approve/reject
+* 💼 **Accounts** — Monitor vouchers for reimbursement
+
+The system was built with a focus on **security, business rules, clean architecture, and user experience**.
+
+---
+
+## 🏗️ Architecture
+
+```text
+                ┌──────────────────┐
+                │   React 18 UI    │
+                └────────┬─────────┘
+                         │ Axios
+                         ▼
+                ┌──────────────────┐
+                │  Express REST API│
+                └────────┬─────────┘
+                         │
+              ┌──────────┼──────────┐
+              ▼          ▼          ▼
+           Auth/RBAC  Services   Validation
+                         │
+                    ┌────┴────┐
+                    ▼         ▼
+                PostgreSQL  Storage
+                 Supabase    Supabase
 ```
 
-## Features by role
+### Project Structure
 
-| Capability | Employee | Director | Accounts |
-|---|---|---|---|
-| Login / role-based routing | yes | yes | yes |
-| Create / edit / delete draft vouchers | yes | no | no |
-| Submit vouchers (with signature) | yes | no | no |
-| Approve / reject (with reason + signature) | no | yes | no |
-| View all vouchers | no | yes | yes |
-| Search / filter / sort | partial | yes | yes |
-| Dashboards with stats | yes | yes | yes |
+```text
+client/          → React application
+server/
+  routes/        → REST endpoints
+  services/      → Business logic
+  middleware/    → Auth, uploads, errors
+  db/            → Database schema
+api/             → Vercel serverless entry
+```
 
-All business rules from the brief are enforced server-side:
-- Voucher numbers are auto-generated and unique
-- Drafts are the only state editable by employees
-- Signatures are mandatory before submit and approve
-- Rejection reason is mandatory
-- Employees can only see their own vouchers
+---
 
-## Setup
+## ✨ Key Features
 
-### 1. Supabase
+| Feature                  | Employee | Director | Accounts |
+| ------------------------ | :------: | :------: | :------: |
+| Create / edit drafts     |     ✅    |     —    |     —    |
+| Submit with signature    |     ✅    |     —    |     —    |
+| View vouchers            |    Own   |    All   |    All   |
+| Search / filter / sort   |     ✅    |     ✅    |     ✅    |
+| AI risk analysis         |     —    |     ✅    |     —    |
+| Approve / reject         |     —    |     ✅    |     —    |
+| Reimbursement monitoring |     —    |     —    |     ✅    |
 
-1. Create a free project at https://supabase.com
-2. Go to **SQL Editor** and run the contents of `server/db/schema.sql`
-3. Copy your **Project URL** and **service_role key** from Project Settings > API
+### Workflow
 
-### 2. Backend
+```text
+Draft
+  ↓
+Submitted
+  ↓
+Pending Approval
+  ├──→ Rejected + Reason
+  │
+  └──→ Approved + Signature
+              ↓
+          Accounts
+```
+
+---
+
+## 🤖 AI Risk Analysis
+
+The Director receives a **0–100 rule-based risk score** to assist review.
+
+Factors include:
+
+* Expense amount
+* Description quality
+* Weekend expense date
+* Employee's recent rejection rate
+
+> The AI assists the decision — it does not make the decision.
+
+---
+
+## 🔐 Security & Business Rules
+
+Security is enforced **server-side**, not just through the UI.
+
+* JWT authentication
+* bcrypt password hashing
+* Role-based authorization
+* Employees can access only their own vouchers
+* Only drafts can be edited/deleted
+* Submitted vouchers become read-only
+* Signatures required before submission/approval
+* Rejection reason required
+* Voucher numbers generated uniquely
+* Secrets kept in environment variables
+
+### Encapsulation
+
+Not everything belongs in the public layer.
+
+**Public:** UI, API contract, documentation
+**Private:** secrets, service credentials, password hashes, internal configuration and sensitive implementation details
+
+The frontend controls the **experience**; the backend controls the **rules**.
+
+---
+
+## 🛠️ Tech Stack
+
+**Frontend:** React 18 · React Router · Bootstrap 5 · Axios · React Toastify
+
+**Backend:** Node.js · Express · JWT · bcrypt · Multer
+
+**Database / Storage:** Supabase PostgreSQL · Supabase Storage
+
+**Deployment:** Vercel
+
+---
+
+## 💡 Engineering Decisions
+
+### Why Supabase?
+
+Used for managed PostgreSQL and Storage so development could focus on application logic rather than building commodity infrastructure.
+
+### Why Bootstrap?
+
+Used as a UI foundation to accelerate responsive development while keeping custom styling for the application's visual identity.
+
+### Why rule-based AI?
+
+A deterministic risk engine keeps the feature explainable, predictable, testable, and free from external LLM dependencies.
+
+### Why same-origin `/api`?
+
+The frontend uses `/api` in production, allowing the React app and serverless API to run under the same Vercel deployment.
+
+> **Third-party integrations were deliberate engineering choices — reducing development time where rebuilding infrastructure would add little business value.**
+
+---
+
+## ⚡ Getting Started
+
+### 1. Clone
+
+```bash
+git clone https://github.com/<your-username>/claimdesk.git
+cd claimdesk
+```
+
+### 2. Setup Supabase
+
+Run:
+
+```text
+server/db/schema.sql
+```
+
+Create a Storage bucket named:
+
+```text
+signatures
+```
+
+### 3. Backend
 
 ```bash
 cd server
 cp .env.example .env
-# edit .env and fill in SUPABASE_URL, SUPABASE_SERVICE_KEY, JWT_SECRET
-
 npm install
-node scripts/seedUsers.js     # one-time: creates demo accounts
-npm run dev                   # starts http://localhost:5000
+node scripts/seedUsers.js
+npm run dev
 ```
 
-### 3. Frontend
+### 4. Frontend
 
 ```bash
 cd client
 npm install
-npm start                     # starts http://localhost:3000
+npm start
 ```
 
-The React dev server proxies `/api` and `/uploads` to the backend, so no CORS changes needed locally.
+**Frontend:** `http://localhost:3000`
+**Backend:** `http://localhost:5000`
 
-## Demo accounts
+---
 
-After running `seedUsers.js` you can log in with any of:
+## 🔑 Demo Accounts
 
-| Role | Email | Password |
-|---|---|---|
-| Employee | employee@claimdesk.com | password123 |
-| Director | director@claimdesk.com | password123 |
-| Accounts | accounts@claimdesk.com | password123 |
+| Role     | Email                    | Password      |
+| -------- | ------------------------ | ------------- |
+| Employee | `employee@claimdesk.com` | `password123` |
+| Director | `director@claimdesk.com` | `password123` |
+| Accounts | `accounts@claimdesk.com` | `password123` |
 
-The login screen also has one-click buttons that pre-fill each demo account.
+---
 
-## REST API summary
+## ☁️ Deployment
 
-All voucher routes require `Authorization: Bearer <token>`.
+Designed as a **single Vercel monorepo**:
 
-```
-POST   /api/auth/login          { email, password } -> { token, user }
-GET    /api/auth/me                                       -> current user
-
-GET    /api/vouchers            ?search=&status=&department=&category=
-                                 &dateFrom=&dateTo=&minAmount=&maxAmount=
-                                 &sortBy=&order=
-GET    /api/vouchers/dashboard  -> aggregated counts + recent 5
-GET    /api/vouchers/:id
-POST   /api/vouchers            (employee) create draft
-PUT    /api/vouchers/:id        (employee) update draft
-DELETE /api/vouchers/:id        (employee) delete draft
-POST   /api/vouchers/:id/submit  multipart 'signature' (employee)
-POST   /api/vouchers/:id/approve multipart 'signature' (director)
-POST   /api/vouchers/:id/reject  { reason } (director)
-
-GET    /api/users               (director / accounts)
+```text
+Vercel
+├── /       → React static build
+└── /api/*  → Node.js serverless API
+                 ↓
+             Supabase
 ```
 
-## Notes
+Environment variables are used for all secrets and deployment-specific configuration.
 
-- JWT is signed with `JWT_SECRET`; never commit the real `.env`.
-- Passwords are stored as bcrypt hashes.
-- Signature images are stored on the server under `server/uploads/` and served from `/uploads/...`.
-- The UI is a clean, professional Bootstrap 5 layout - not flashy, not AI-looking, just a sensible internal tool.
-- Toast notifications (react-toastify) are used for success / error feedback on every action.
+---
+
+## 🎯 What This Project Demonstrates
+
+**Frontend architecture** · **REST API design** · **Authentication & RBAC** · **Database design** · **File uploads** · **Business-rule enforcement** · **Third-party integration** · **Responsive UI/UX** · **Serverless deployment**
+
+---
+
+<p align="center">
+
+### Built with React + Node.js + Supabase
+
+**ClaimDesk — Turning manual expense claims into a structured digital workflow.**
+
+</p>
